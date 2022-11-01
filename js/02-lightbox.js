@@ -31,7 +31,3 @@ const lightbox = new SimpleLightbox(".gallery a", {
   animationSpeed: 500,
   maxZoom: 5,
 });
-
-lightbox.on("show.simplelightbox", function (e) {
-  setTimeout(() => (document.querySelector("body").style.paddingRight = "0px"));
-});

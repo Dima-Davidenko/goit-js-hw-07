@@ -1,47 +1,64 @@
 import { galleryItems } from "./gallery-items.js";
-// Change code below this line
-function createGaleryMarkup(galleryItems) {
-  const markup = galleryItems
-    .map(({ preview = "#", original = "#", description = "#" } = {}) => {
-      return `<div class="gallery__item">
-      <a class="gallery__link" href="${original}">
+function makeMarkup() {
+  let markup = "";
+  for (const item of galleryItems) {
+    const { preview = "#", original = "#", description = "#" } = item;
+    markup += `<div class="gallery__item">
+        <a class="gallery__link" href="${original}">
         <img
-          class="gallery__image"
-          src="${preview}"
-          data-source="${original}"
-          alt="${description}"
+            class="gallery__image"
+            src="${preview}"
+            data-source="${original}"
+            alt="${description}"
         />
-      </a>
+        </a>
     </div>`;
-    })
-    .join("");
+  }
   return markup;
 }
 
-function onGalleryClickHandle(event) {
-  event.preventDefault();
-  if (!event.target.classList.contains("gallery__image")) {
-    return;
-  }
-  showModalImg(event.target.dataset.source);
-}
+const modal = {
+  gallery: document.querySelector(".gallery"),
+  instance: {},
 
-function showModalImg(imgSource) {
-  const bigImageModal = basicLightbox.create(`<img src="${imgSource}">`);
-  bigImageModal.show();
-  document.addEventListener("keydown", function closeModal(e) {
-    if (e.key !== "Escape") {
+  handleGalleryClick: function (event) {
+    event.preventDefault();
+    const { target, currentTarget } = event;
+    if (currentTarget === target) {
       return;
     }
-    bigImageModal.close();
-    document.removeEventListener("keydown", closeModal);
-  });
-}
+    const srcImage = target.dataset.source;
+    this.createModalImage(srcImage);
+    this.showModalImage();
+  },
 
-const gallery = document.querySelector(".gallery");
+  createModalImage: function (srcImage) {
+    this.instance = basicLightbox.create(`<img src="${srcImage}">`, {
+      onShow: this.onShowModalImage.bind(this),
+      onClose: this.onCloseModalImage.bind(this),
+    });
+  },
 
-const galleryMarkup = createGaleryMarkup(galleryItems);
+  onShowModalImage: function () {
+    document.addEventListener("keydown", this.handleEscapePress);
+  },
 
-gallery.insertAdjacentHTML("beforeend", galleryMarkup);
+  onCloseModalImage: function () {
+    document.removeEventListener("keydown", this.handleEscapePress);
+  },
 
-gallery.addEventListener("click", onGalleryClickHandle);
+  handleEscapePress: function (event) {
+    if (event.code === "Escape") modal.instance.close();
+  },
+
+  renderGalleryMarkup: function (markup) {
+    this.gallery.innerHTML = markup;
+  },
+
+  showModalImage: function () {
+    this.instance.show();
+  },
+};
+
+modal.renderGalleryMarkup(makeMarkup());
+modal.gallery.addEventListener("click", modal.handleGalleryClick.bind(modal));
